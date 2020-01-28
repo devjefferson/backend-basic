@@ -1,5 +1,7 @@
 const dbConnection = require('../../services/dbConnection')
 const UserModel = require('../../models/User')
+const Regex = require('../../utils/Regex')
+
 /*
   CRUD USER
 */
@@ -11,8 +13,8 @@ module.exports = {
   },
   async store(req, res){
     dbConnection()
-    try {
 
+    try {
       const User = await UserModel.create(req.body)
       await User.save().then(()=>{
         res.send("OK")
@@ -23,8 +25,11 @@ module.exports = {
   },
   async listone(req, res){
     dbConnection()
-    const { name } = req.params
-    const User = await UserModel.findOne({name})
+    const User = await UserModel.findOne({
+      name: await Regex(
+        req.params
+      )
+    })
 
     res.status(200).json(User)
   },
