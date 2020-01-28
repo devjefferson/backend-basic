@@ -20,18 +20,24 @@ module.exports = {
         res.send("OK")
       })
    } catch (error) {
-     console.log(error)
+    res.status(400).json({message: 'Não foi possivel criar um novo Usuario'})
    }
   },
   async listone(req, res){
     dbConnection()
-    const User = await UserModel.findOne({
-      name: await Regex(
-        req.params
-      )
-    })
 
-    res.status(200).json(User)
+      try {
+        const User = await UserModel.findOne(req.params)
+          if(User){
+            res.status(200).json(User)
+          } else{
+            res.status(400).json({message: 'Usuario não encotrado'})
+          }
+      } catch (error) {
+        res.status(400).json({message: 'Usuario não encotrado'})
+      }
+    
+    
   },
   async update(req, res){
     dbConnection()
@@ -40,7 +46,7 @@ module.exports = {
       await UserModel.findByIdAndUpdate({_id: id}, req.body)
       res.status(201).json({Mensagem: `O Usuario Foi Alterado com sucesso`})
     } catch (error) {
-      
+      res.status(400).json({message: 'Não foi possivel alterar o Usuario'})
     }
   },
   async delete(req, res){
@@ -50,7 +56,7 @@ module.exports = {
       await UserModel.findByIdAndDelete({_id: id})
       res.status(201).json({Mensagem: `O Usuario Foi Deletado com sucesso`})
     } catch (error) {
-      
+      res.status(400).json({message: 'Não foi possivel Deleta O usuario'})
     }
   }
 }
