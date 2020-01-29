@@ -1,6 +1,5 @@
 const dbConnection = require('../../services/dbConnection')
 const UserModel = require('../../models/User')
-const Regex = require('../../utils/Regex')
 
 /*
   CRUD USER
@@ -13,7 +12,6 @@ module.exports = {
   },
   async store(req, res){
     dbConnection()
-
     try {
       const User = await UserModel.create(req.body)
       await User.save().then(()=>{
@@ -25,17 +23,12 @@ module.exports = {
   },
   async listone(req, res){
     dbConnection()
-
-      try {
-        const User = await UserModel.findOne(req.params)
-          if(User){
-            res.status(200).json(User)
-          } else{
-            res.status(400).json({message: 'Usuario não encotrado'})
-          }
-      } catch (error) {
-        res.status(400).json({message: 'Usuario não encotrado'})
-      }
+          
+         await UserModel.findOne({_id: req.body.id}).then(User=>{
+          res.status(200).json(User)
+         }).catch(error=>{
+           res.status(400).send({error})
+         })
     
     
   },

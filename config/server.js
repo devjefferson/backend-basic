@@ -1,8 +1,8 @@
 const http = require('http')
-const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const express = require('express')
 const app = express()
+const bodyParser = require('body-parser')
 const routes = require('../src/routes')
 require("dotenv").config()
 
