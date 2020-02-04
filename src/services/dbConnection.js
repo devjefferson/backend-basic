@@ -1,10 +1,10 @@
-const mongoose = require('mongoose')
+const Sequelize = require('sequelize');
+const {user, password, database, host, dialect } = require("../../config/database"); // database
 
-function Mongo(){
-  console.log('OK')
-  mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}`, {useNewUrlParser: true, useUnifiedTopology: true})
-}
+const sequelize = new Sequelize(database, user, password,{
+  host,
+  dialect
+})
 
-module.exports = ()=>{
-  return Mongo()
-}
+
+module.exports = {sequelize, Sequelize}

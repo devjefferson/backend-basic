@@ -1,31 +1,49 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const {sequelize, Sequelize} = require('../services/dbConnection');
+const bcrypt = require('bcryptjs')
 
-
-const UserSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    require: true
+const Usuario = sequelize.define('usuarios',{
+  nome:{
+    type: Sequelize.STRING,
+    allowNull: false,
+    validate:{
+      notEmpty: true
+    }
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
+  email:{
+    type: Sequelize.STRING,
+    allowNull: false,
+    validate:{
+      notEmpty: true
+    }
   },
-  password: {
-    type: String,
-    required: true
+  password:{
+    type: Sequelize.STRING,
+    allowNull: false,
+    validate:{
+      notEmpty: true
+    }
   },
-  createAt: {
-    type: Date,
-    default: Date.now
+  data_nasc:{
+    type: Sequelize.STRING,
+    allowNull: false,
+    validate:{
+      notEmpty: true
+    }
+  },
+},
+{
+  hooks:{
+    beforeCreate: usuario =>{
+      const salt = bcrypt.genSaltSync()
+      usuario.set('password', bcrypt.hashSync(usuario.password, salt))
+    }
+  },
+  classMethods:{
+    isPassword:(encodedPassword, password)=> bcrypt.compareSync(password, encodedPassword)
   }
-});
+}
+)
 
-UserSchema.pre('save', async function (next) {
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
-});
+Usuario.pre
 
-module.exports = mongoose.model('users', UserSchema);
+module.exports = Usuario

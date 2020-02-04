@@ -1,55 +1,99 @@
-const dbConnection = require('../../services/dbConnection')
-const UserModel = require('../../models/User')
+const bcrypt = require('bcryptjs')
+const generateToken = require('../../utils/generateToken')
+const { sequelize } = require('../../services/dbConnection')
+const User = require('../../models/User')
 
 /*
   CRUD USER
 */
 module.exports = {
-  async list(req, res){
-    dbConnection()
-    const User = await UserModel.find()
-    res.status(200).send(User)
-  },
-  async store(req, res){
-    dbConnection()
+  async list(req, res, next) {
     try {
-      const User = await UserModel.create(req.body)
-      await User.save().then(()=>{
-        res.send("OK")
-      })
-   } catch (error) {
-    res.status(400).json({message: 'Não foi possivel criar um novo Usuario'})
-   }
-  },
-  async listone(req, res){
-    dbConnection()
-          
-         await UserModel.findOne({_id: req.body.id}).then(User=>{
-          res.status(200).json(User)
-         }).catch(error=>{
-           res.status(400).send({error})
-         })
-    
-    
-  },
-  async update(req, res){
-    dbConnection()
-    const {id} = req.params
-    try {
-      await UserModel.findByIdAndUpdate({_id: id}, req.body)
-      res.status(201).json({Mensagem: `O Usuario Foi Alterado com sucesso`})
+      const user = await User.findAll()
+      res.status(200).send({ user })
     } catch (error) {
-      res.status(400).json({message: 'Não foi possivel alterar o Usuario'})
+      res.status(400).json({ mensagem: "Não a Usuario Cadastrado" })
     }
   },
-  async delete(req, res){
-    dbConnection()
-    const {id} = req.params
+  async store(req, res, next) {
+    const { email } = req.body
     try {
-      await UserModel.findByIdAndDelete({_id: id})
-      res.status(201).json({Mensagem: `O Usuario Foi Deletado com sucesso`})
+      const Usuario = await User.findOne({
+        where: { email: email }
+      })
+
+      if (Usuario) {
+        res.status(401).json({ Error: `O email: ${email} já esta cadastrado` })
+        return next()
+      } 
+
+      await User.create(req.body)
+        res.status(201).json({
+          mensagem: `Usuario cadastrado com Sucesso`
+        })
+      
+      return next()
     } catch (error) {
-      res.status(400).json({message: 'Não foi possivel Deleta O usuario'})
+      res.status(401).json({ error })
+      next()
+    }
+  },
+  async listone(req, res) {
+    const { id } = req.params
+    try {
+      const Usuario = await User.findOne({
+        where: { id }
+      })
+
+      if (!Usuario) {
+        res.status(400).json({ mensagem: "Usuario Não Cadastrado" })
+        return next()
+      }
+
+      Usuario.password = undefined
+
+      res.status(200).json({ Usuario })
+
+    } catch (error) {
+      res.status(400).json({ error })
+    }
+
+
+  },
+  async update(req, res, next) {
+    const { id } = req.params
+    try {
+      if (!await User.findOne({ where: { id } })) {
+        res.status(400).json({ error: "Não existe Nenhum Usuario com esse ID" })
+        return next()
+      }
+
+      if (await User.findOne({ where: { email: req.body.email } })) {
+        res.status(400).json({ error: "Esse Email Ja existe" })
+        return next()
+      }
+
+      await User.update(req.body, { where: { id } })
+
+      res.status(200).json({ msg: "Usuario Alterado" })
+      return next()
+
+    } catch (error) {
+      res.status(400).json({ error })
+    }
+
+  },
+  async delete(req, res) {
+    const { id } = req.params
+    try {
+      if (!await User.findOne({ where: { id } })) {
+        return res.status(400).json({ error: "Não existe Nenhum Usuario com esse ID" })
+      }
+      await User.destroy({ where: { id } })
+
+      res.status(200).json({ messagem: "Usuario Deletado Com Sucesso" })
+    } catch (error) {
+      res.status(400).json({ error })
     }
   }
 }
